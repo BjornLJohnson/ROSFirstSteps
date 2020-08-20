@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<robot name="simple_drone" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="width" value=".375" />
+  <xacro:property name="length" value=".375" />
+  <xacro:property name="height" value=".1" />
+  <xacro:property name="pi" value="3.1415" />
+  <xacro:property name="rotor_radius" value=".125" />
+  <xacro:property name="rotor_height" value=".1" />
+  <!-- d = .25 -->
+  <xacro:property name="rotor_dist" value="0.17677" />
+ 
+  <xacro:macro name="default_inertial" params="mass">
+    <inertial>
+      <mass value="${mass}" />
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+    </inertial>
+  </xacro:macro>
+
+  <material name="red">
+    <color rgba="0.8 0 0 1"/>
+  </material>
+
+  <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+
+  <material name="green">
+    <color rgba="0 0.8 0 1"/>
+  </material>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+    </collision>
+    <xacro:default_inertial mass="5"/>
+  </link>
+
+  <gazebo reference="base_link">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+  <xacro:macro name="rotor" params="prefix suffix reflect side color">
+    <link name="${prefix}_${suffix}_rotor">
+      <visual>
+        <geometry>
+          <box size="${rotor_radius} ${rotor_radius} ${rotor_height}"/>
+          <!-- <cylinder radius="${rotor_radius}" length="${rotor_height}"/> -->
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${rotor_radius} ${rotor_radius} ${rotor_height}"/>
+          <!-- <cylinder radius="${rotor_radius}" length="${rotor_height}"/> -->
+        </geometry>
+      </collision>
+      <xacro:default_inertial mass="1"/>
+    </link>
+
+    <joint name="${prefix}_${suffix}_rotor_joint" type="continuous">
+      <axis xyz="0 0 1" rpy="0 0 0" />
+      <parent link="base_link"/>
+      <child link="${prefix}_${suffix}_rotor"/>
+      <origin xyz="${rotor_dist*side} ${rotor_dist*reflect} ${height}" rpy="0 0 0"/>
+      <limit effort="150" velocity="5"/>
+    </joint>
+
+    <transmission name="${prefix}_${suffix}_rotor_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="${prefix}_${suffix}_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="${prefix}_${suffix}_rotor_joint">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+
+      <gazebo reference="${prefix}_${suffix}_rotor">
+        <material>Gazebo/Red</material>
+      </gazebo>
+
+  </xacro:macro>
+
+  <xacro:rotor prefix="right" suffix="front" reflect="-1" side="1" color="blue"/>
+  <xacro:rotor prefix="right" suffix="back" reflect="1" side="1" color="red"/>
+  <xacro:rotor prefix="left" suffix="front" reflect="-1" side="-1" color="blue"/>
+  <xacro:rotor prefix="left" suffix="back" reflect="1" side="-1" color="red"/>
+
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/simple_drone</robotNamespace>
+    </plugin>
+  </gazebo>
+
+</robot>

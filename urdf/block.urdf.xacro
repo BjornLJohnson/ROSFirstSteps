@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot name="block" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="width" value=".5" />
+  <xacro:property name="length" value=".5" />
+  <xacro:property name="height" value=".25" />
+  <xacro:property name="pi" value="3.1415" />
+ 
+  <xacro:macro name="default_inertial" params="mass">
+    <inertial>
+      <mass value="${mass}" />
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+    </inertial>
+  </xacro:macro>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${width} ${length} ${height}"/>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${width} ${length} ${height}"/>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+      </geometry>
+    </collision>
+    <xacro:default_inertial mass="10"/>
+  </link>
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+  </gazebo>
+
+</robot>

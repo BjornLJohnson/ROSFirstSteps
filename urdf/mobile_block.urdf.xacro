@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<robot name="block" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="width" value=".5" />
+  <xacro:property name="length" value="1" />
+  <xacro:property name="height" value=".25" />
+  <xacro:property name="pi" value="3.1415" />
+  <xacro:property name="wheel_radius" value=".125" />
+  <xacro:property name="wheel_width" value=".125" />
+ 
+  <xacro:macro name="default_inertial" params="mass">
+    <inertial>
+      <mass value="${mass}" />
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+    </inertial>
+  </xacro:macro>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+    </collision>
+    <xacro:default_inertial mass="5"/>
+  </link>
+
+  <xacro:macro name="wheel" params="prefix suffix reflect side">
+    <link name="${prefix}_${suffix}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <xacro:default_inertial mass="1"/>
+    </link>
+
+    <joint name="${prefix}_${suffix}_wheel_joint" type="continuous">
+      <axis xyz="0 1 0" rpy="0 0 0" />
+      <parent link="base_link"/>
+      <child link="${prefix}_${suffix}_wheel"/>
+      <origin xyz="${.5*length*reflect} ${(.5*width+wheel_width/2)*side} -${wheel_radius+.05}" rpy="0 0 0"/>
+      <limit effort="150" velocity="5"/>
+    </joint>
+
+      <transmission name="${prefix}_${suffix}_wheel_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <actuator name="${prefix}_${suffix}_motor">
+          <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+        <joint name="${prefix}_${suffix}_wheel_joint">
+          <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+  </transmission>
+
+
+  </xacro:macro>
+
+  <xacro:wheel prefix="right" suffix="front" reflect="-1" side="1"/>
+  <xacro:wheel prefix="right" suffix="back" reflect="1" side="1"/>
+  <xacro:wheel prefix="left" suffix="front" reflect="-1" side="-1"/>
+  <xacro:wheel prefix="left" suffix="back" reflect="1" side="-1"/>
+
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/mobile_block</robotNamespace>
+    </plugin>
+  </gazebo>
+
+</robot>
